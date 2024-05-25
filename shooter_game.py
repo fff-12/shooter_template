@@ -175,9 +175,13 @@ while run:
         
         # якщо спрайт торкнувся ворога зменшує життя
         if sprite.spritecollide(player, monsters, False) or sprite.spritecollide(player, asteroids, False):
-            sprite.spritecollide(player, monsters, True)
-            sprite.spritecollide(player, asteroids, True)
-            life = life -1
+            if sprite.spritecollide(player, monsters, True):
+                monster = Enemy(img_enemy, randint(80, win_width - 80), -40, 80, 50, randint(1, 3))
+                monsters.add(monster)
+            if sprite.spritecollide(player, asteroids, True):
+                asteroid = Asteroid(img_non_killable_enemy, randint(30, win_width - 30), -40, 80, 50, randint(1, 7))
+                asteroids.add(asteroid)
+            life = life - 0
 
         if sprite.spritecollide(player, health_packs, True):
             health_pack.apply()
