@@ -24,7 +24,7 @@ img_health = "healthPoint.png"
 score = 0
 lost = 0
 goal = 100
-max_lost = 3
+max_lost = 50
 life = 3
 
 class GameSprite(sprite.Sprite):
@@ -47,7 +47,7 @@ class Player(GameSprite):
         if keys[K_RIGHT] and self.rect.x < win_width - 80:
             self.rect.x += self.speed
     def fire(self):
-        bullet = Bullet("bullet.png", self.rect.centerx, self.rect.top, 15, 20, -15)
+        bullet = Bullet("bullet.png", self.rect.centerx - 5, self.rect.top, 15, 20, -15)
         bullets.add(bullet)
 
 class Enemy(GameSprite):
@@ -71,8 +71,7 @@ class HealthPack(GameSprite):
         self.rect.y += self.speed
         if self.rect.y > win_height:
             self.rect.x = randint (80, win_width - 80)
-            self.rect.y = 0
-    
+            self.rect.y = 0 
     def apply(self):
         global life
         life += 1
@@ -132,7 +131,7 @@ while run:
                     fire_sound.play()
                     player.fire()
                    
-                if num_fire >= 20 and rel_time == False : #якщо гравець зробив 5 пострілів
+                if num_fire >= 20 and rel_time == False : #якщо гравець зробив 20 пострілів
                     last_time = timer() #засікаємо час, коли це сталося
                     rel_time = True #ставимо прапор перезарядки
 
@@ -175,13 +174,14 @@ while run:
         
         # якщо спрайт торкнувся ворога зменшує життя
         if sprite.spritecollide(player, monsters, False) or sprite.spritecollide(player, asteroids, False):
+            life = life - 1
             if sprite.spritecollide(player, monsters, True):
                 monster = Enemy(img_enemy, randint(80, win_width - 80), -40, 80, 50, randint(1, 3))
                 monsters.add(monster)
             if sprite.spritecollide(player, asteroids, True):
                 asteroid = Asteroid(img_non_killable_enemy, randint(30, win_width - 30), -40, 80, 50, randint(1, 7))
                 asteroids.add(asteroid)
-            life = life - 0
+            
 
         if sprite.spritecollide(player, health_packs, True):
             health_pack.apply()
