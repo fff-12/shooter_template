@@ -1,3 +1,5 @@
+from operator import truediv
+from turtle import update
 from pygame import *
 from random import randint
 from time import time as timer #імпортуємо функцію для засікання часу, щоб інтерпретатор не шукав цю функцію в pygame модулі time, даємо їй іншу назву самі
@@ -18,6 +20,7 @@ lose = font2.render('YOU LOSE!', True, (180, 0, 0))
 img_back = "galaxy.jpg"
 img_hero = "rocket.png"
 img_enemy = "ufo.png"
+img_superEnemy = "big.png"
 img_non_killable_enemy = "asteroid.png"
 img_health = "healthPoint.png"
 
@@ -66,6 +69,20 @@ class Asteroid(GameSprite):
             self.rect.x = randint (80, win_width - 80)
             self.rect.y = 0
 
+class SuperEnemy(Enemy):
+    def __init__(self, sprite_img, sprite_x, sprite_y, size_x, size_y, sprite_speed, max_hits):
+        super().__init__(sprite_img, sprite_x, sprite_y, size_x, size_y, sprite_speed)
+        self.max_hits = max_hits
+    def gotHit(self):
+        self.max_hits -= 1
+    def isKilled(self):
+        if(self.max_hits <= 0):
+            self.kill()
+            return True
+        else: return False
+        
+
+
 class HealthPack(GameSprite):
     def update(self):
         self.rect.y += self.speed
@@ -102,7 +119,7 @@ health_packs = sprite.Group()
 bullets = sprite.Group()
 monsters = sprite.Group()
 asteroids = sprite.Group()
-
+superMonsters = sprite.Group()
 # health_packs.add(health_pack)
 
 for i in range(1, 6):
@@ -111,6 +128,9 @@ for i in range(1, 6):
 for i in range(1, 3):
     asteroid = Asteroid(img_non_killable_enemy, randint(30, win_width - 30), -40, 80, 50, randint(1, 7))
     asteroids.add(asteroid)
+for i in range(1, 3):
+    superMonster = SuperEnemy(img_superEnemy, randint(80, win_width - 80), -40, 80, 50, randint(1, 3), 3)
+    superMonsters.add(superMonster)
 
 run = True
 finish = False
@@ -143,10 +163,12 @@ while run:
         bullets.update()
         asteroids.update()
         health_packs.update()
+        superMonsters.update()
         
         health_packs.draw(window)
         player.reset()
         monsters.draw(window)
+        superMonsters.draw(window)
         bullets.draw(window)
         asteroids.draw(window)
 
@@ -172,8 +194,19 @@ while run:
             monster = Enemy(img_enemy, randint(80, win_width - 80), -40, 80, 50, randint(1, 3))
             monsters.add(monster)
         
+        for superMonster in superMonsters:
+            if sprite.spritecollide(superMonster, bullets, True):
+                superMonster.gotHit()
+                if superMonster.isKilled():
+                    score = score + 1
+                    superMonster = SuperEnemy(img_superEnemy, randint(80, win_width - 80), -40, 80, 50, randint(1, 3), 3)
+                    superMonsters.add(superMonster)
+                    
+
+
+
         # якщо спрайт торкнувся ворога зменшує життя
-        if sprite.spritecollide(player, monsters, False) or sprite.spritecollide(player, asteroids, False):
+        if sprite.spritecollide(player, monsters, False) or sprite.spritecollide(player, asteroids, False) or sprite.spritecollide(player, superMonsters, False):
             life = life - 1
             if sprite.spritecollide(player, monsters, True):
                 monster = Enemy(img_enemy, randint(80, win_width - 80), -40, 80, 50, randint(1, 3))
@@ -181,6 +214,9 @@ while run:
             if sprite.spritecollide(player, asteroids, True):
                 asteroid = Asteroid(img_non_killable_enemy, randint(30, win_width - 30), -40, 80, 50, randint(1, 7))
                 asteroids.add(asteroid)
+            if sprite.spritecollide(player, superMonsters, True):
+                superMonster = SuperEnemy(img_superEnemy, randint(80, win_width - 80), -40, 80, 50, randint(1, 3), 3)
+                superMonsters.add(superMonster)
             
 
         if sprite.spritecollide(player, health_packs, True):
