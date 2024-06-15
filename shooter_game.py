@@ -1,20 +1,12 @@
-from operator import truediv
-from turtle import update
 from pygame import *
 from random import randint
 from time import time as timer #імпортуємо функцію для засікання часу, щоб інтерпретатор не шукав цю функцію в pygame модулі time, даємо їй іншу назву самі
 
-
-mixer.init()
-mixer.music.load('space.ogg')
-mixer.music.play()
-fire_sound = mixer.Sound('fire.ogg')
-
 font.init()
 font1 = font.SysFont("Arial", 36)
 font2 = font.SysFont("Arial", 80)
-win = font2.render('YOU WIN!', True, (255, 255, 255))
-lose = font2.render('YOU LOSE!', True, (180, 0, 0))
+win = font2.render('YOU WIN!', True, (0, 255, 0))
+lose = font2.render('YOU LOSE!', True, (255, 0, 0))
 
 
 img_back = "galaxy.jpg"
@@ -29,6 +21,7 @@ lost = 0
 goal = 50
 max_lost = 50
 life = 5
+inf = False
 
 class GameSprite(sprite.Sprite):
     def __init__(self, sprite_img, sprite_x, sprite_y, size_x, sixe_y , sprite_speed):
@@ -60,17 +53,17 @@ class Enemy(GameSprite):
     def update(self):
         self.rect.x -= self.speed
         global lost
-        if self.rect.y > win_height:
-            self.rect.x = randint (80, win_width - 80)
-            self.rect.y = 0
+        if self.rect.x < 0:
+            self.rect.y = randint(80, win_height - 80)
+            self.rect.x = 740
             lost +=1
 
 class Asteroid(GameSprite):
     def update(self):
         self.rect.x -= self.speed
-        if self.rect.y > win_height:
-            self.rect.x = randint (80, win_width - 80)
-            self.rect.y = 0
+        if self.rect.x < 0:
+            self.rect.y = randint(80, win_height - 80)
+            self.rect.x = 740
 
 class SuperEnemy(Enemy):
     def __init__(self, sprite_img, sprite_x, sprite_y, size_x, size_y, sprite_speed, max_hits):
@@ -89,18 +82,24 @@ class HealthPack(GameSprite):
     def update(self):
         self.rect.x -= self.speed
         if self.rect.x < 0:
-            self.rect.x = randint (80, win_height - 80)
+            self.rect.y = randint(80, win_height - 80)
             self.rect.x = 740 
     def apply(self):
         global life
         life += 1
         self.kill()
     def kill_all2(self):
-        global monsterі, asteroids, superMonsters
+        global monsters, asteroids, superMonsters
 
         monsters.empty()
         asteroids.empty()
         superMonsters.empty()
+        self.kill()
+    
+    def inf2(self):
+        global inf
+
+        inf = True
         self.kill()
 
 class Bullet(GameSprite):
@@ -110,8 +109,19 @@ class Bullet(GameSprite):
     def update(self):
         self.rect.x -= self.speed
         # зникає, якщо дійде до краю екрана
-        if self.rect.y < 0:
+        if self.rect.x > 700:
             self.kill()
+
+def first_spawn():
+    for i in range(1, 6):
+        monster = Enemy(img_enemy, 740, randint(80, win_height - 80), 80, 50, randint(1, 3))
+        monsters.add(monster)
+    for i in range(1, 3):
+        asteroid = Asteroid(img_non_killable_enemy, 740, randint(80, win_height - 80), 80, 50, randint(1, 7))
+        asteroids.add(asteroid)
+    for i in range(1, 3):
+        superMonster = SuperEnemy(img_superEnemy, 740, randint(80, win_height - 80), 80, 50, randint(1, 3), 3)
+        superMonsters.add(superMonster)
 
 win_width = 700
 win_height = 500
@@ -129,17 +139,10 @@ monsters = sprite.Group()
 asteroids = sprite.Group()
 superMonsters = sprite.Group()
 kill_all = sprite.Group()
+infs = sprite.Group()
 # health_packs.add(health_pack)
 
-for i in range(1, 6):
-    monster = Enemy(img_enemy, 740, randint(80, win_height - 80), 80, 50, randint(1, 3))
-    monsters.add(monster)
-for i in range(1, 3):
-    asteroid = Asteroid(img_non_killable_enemy, 740, randint(80, win_height - 80), 80, 50, randint(1, 7))
-    asteroids.add(asteroid)
-for i in range(1, 3):
-    superMonster = SuperEnemy(img_superEnemy, 740, randint(80, win_height - 80), 80, 50, randint(1, 3), 3)
-    superMonsters.add(superMonster)
+first_spawn()
 
 run = True
 finish = False
@@ -147,7 +150,10 @@ clock = time.Clock()
 FPS = 30
 rel_time = False  # прапор, що відповідає за перезаряджання
 num_fire = 0  # змінна для підрахунку пострілів    
-
+spawn_time = 0
+spawn_time1 = 0
+timer_s = 0
+inf_time = 0
 
 while run:
     for e in event.get():
@@ -157,12 +163,20 @@ while run:
             if e.key == K_SPACE:
                 if num_fire < 20 and rel_time == False:
                     num_fire += 1
-                    fire_sound.play()
                     player.fire()
 
                 if num_fire >= 20 and rel_time == False : #якщо гравець зробив 20 пострілів
                     last_time = timer() #засікаємо час, коли це сталося
                     rel_time = True #ставимо прапор перезарядки
+
+    spawn_time += clock.get_time() / 1000
+    spawn_time1 += clock.get_time() / 1000
+    timer_s += clock.get_time() / 1000
+
+    if inf == True:
+        inf_time += clock.get_time() / 1000
+        if int(inf_time) >= 10:
+            inf = False
 
     if not finish:
         window.blit(background, (0, 0))
@@ -173,9 +187,11 @@ while run:
         health_packs.update()
         superMonsters.update()
         kill_all.update()
+        infs.update()
 
         health_packs.draw(window)
         kill_all.draw(window)
+        infs.draw(window)
         player.reset()
         monsters.draw(window)
         superMonsters.draw(window)
@@ -186,9 +202,15 @@ while run:
             health_pack = HealthPack(img_health, 740, randint(80, win_height - 80), 30, 30, 7)
             health_packs.add(health_pack)
 
-        if len(kill_all) == 0:
+        if len(kill_all) == 0 and spawn_time >= 15:
             kill_all1 = HealthPack('pngegg.png', 740, randint(80, win_height - 80), 30, 30, 7)
             kill_all.add(kill_all1)
+            spawn_time = 0
+        
+        if len(infs) == 0 and spawn_time1 >= 5:
+            inf1 = HealthPack('miki.png', 740, randint(80, win_height - 80), 30, 30, 7)
+            infs.add(inf1)
+            spawn_time1 = 0
 
         if rel_time == True:
             now_time = timer() # зчитуємо час
@@ -217,7 +239,8 @@ while run:
 
         # якщо спрайт торкнувся ворога зменшує життя
         if sprite.spritecollide(player, monsters, False) or sprite.spritecollide(player, asteroids, False) or sprite.spritecollide(player, superMonsters, False):
-            life = life - 1
+            if not inf:
+                life = life - 1
             if sprite.spritecollide(player, monsters, True):
                 monster = Enemy(img_enemy, 740, randint(80, win_height - 80), 80, 50, randint(1, 3))
                 monsters.add(monster)
@@ -230,8 +253,14 @@ while run:
 
         if sprite.spritecollide(player, health_packs, True):
             health_pack.apply()
+
         if sprite.spritecollide(player, kill_all, True):
             kill_all1.kill_all2()
+            first_spawn()
+
+        if sprite.spritecollide(player, infs, True):
+            inf1.inf2()
+            inf_time = 0
 
         # програш
         if life == 0 or lost >= max_lost:
@@ -239,11 +268,17 @@ while run:
             window.blit(lose, (200, 200))
 
         # перевірка виграшу: скільки очок набрали?
-        if score >= goal:
+        if score >= goal and timer_s >= 60:
             finish = True
             window.blit(win, (200, 200))
+        
+        if score < goal and timer_s >= 60:
+            finish = True
+            window.blit(lose, (200, 200))
 
-        text = font1.render("Рахунок: " + str(score),1, (255,255,255))
+
+
+        text = font1.render(f"Рахунок: " + str(score),1, (255,255,255))
         window.blit(text,(10, 20))
 
         text_lose = font1.render("Пропущенно: " + str(lost),1, (255, 255, 255))
@@ -251,6 +286,10 @@ while run:
 
         text_life = font1.render(str(life), 1, (0, 150, 0))
         window.blit(text_life, (650, 10))
+
+        text_timer = font1.render(f"{60 - int(timer_s)}sec", 1, (255, 255, 255))
+        window.blit(text_timer, (350, 10))
+
         display.update()
 
     clock.tick(FPS)
