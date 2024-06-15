@@ -76,6 +76,12 @@ class SuperEnemy(Enemy):
             self.kill()
             return True
         else: return False
+    def super_update(self):
+        self.rect.x -= self.speed
+        global lost, finish
+        if self.rect.x < 0:
+            finish = True
+            window.blit(lose, (200, 200))
 
 
 class HealthPack(GameSprite):
@@ -113,15 +119,17 @@ class Bullet(GameSprite):
             self.kill()
 
 def first_spawn():
-    for i in range(1, 6):
+    for i in range(1, 8):
         monster = Enemy(img_enemy, 740, randint(80, win_height - 80), 80, 50, randint(1, 3))
         monsters.add(monster)
-    for i in range(1, 3):
+    for i in range(1, 5):
         asteroid = Asteroid(img_non_killable_enemy, 740, randint(80, win_height - 80), 80, 50, randint(1, 7))
         asteroids.add(asteroid)
-    for i in range(1, 3):
+    for i in range(1, 6):
         superMonster = SuperEnemy(img_superEnemy, 740, randint(80, win_height - 80), 80, 50, randint(1, 3), 3)
         superMonsters.add(superMonster)
+
+
 
 win_width = 700
 win_height = 500
@@ -154,6 +162,11 @@ spawn_time = 0
 spawn_time1 = 0
 timer_s = 0
 inf_time = 0
+boss = sprite.Group()
+bhp = 40
+
+boss1 = SuperEnemy('pudge.png', 740, randint(80, win_height - 80), 200, 160, 2, 40)
+boss.add(boss1)
 
 while run:
     for e in event.get():
@@ -161,11 +174,11 @@ while run:
             run = False
         elif e.type == KEYDOWN and not finish: ###
             if e.key == K_SPACE:
-                if num_fire < 20 and rel_time == False:
+                if num_fire < 30 and rel_time == False:
                     num_fire += 1
                     player.fire()
 
-                if num_fire >= 20 and rel_time == False : #якщо гравець зробив 20 пострілів
+                if num_fire >= 30 and rel_time == False : #якщо гравець зробив 20 пострілів
                     last_time = timer() #засікаємо час, коли це сталося
                     rel_time = True #ставимо прапор перезарядки
 
@@ -175,11 +188,16 @@ while run:
 
     if inf == True:
         inf_time += clock.get_time() / 1000
-        if int(inf_time) >= 10:
+        if int(inf_time) >= 2:
             inf = False
 
     if not finish:
         window.blit(background, (0, 0))
+        if int(timer_s) >= 1:
+            for i in boss:
+                i.super_update()
+            boss.draw(window)
+        
         player.update()
         monsters.update()
         bullets.update()
@@ -202,12 +220,12 @@ while run:
             health_pack = HealthPack(img_health, 740, randint(80, win_height - 80), 30, 30, 7)
             health_packs.add(health_pack)
 
-        if len(kill_all) == 0 and spawn_time >= 15:
+        if len(kill_all) == 0 and spawn_time >= 17:
             kill_all1 = HealthPack('pngegg.png', 740, randint(80, win_height - 80), 30, 30, 7)
             kill_all.add(kill_all1)
             spawn_time = 0
         
-        if len(infs) == 0 and spawn_time1 >= 5:
+        if len(infs) == 0 and spawn_time1 >= 15:
             inf1 = HealthPack('miki.png', 740, randint(80, win_height - 80), 30, 30, 7)
             infs.add(inf1)
             spawn_time1 = 0
@@ -236,6 +254,13 @@ while run:
                     score = score + 1
                     superMonster = SuperEnemy(img_superEnemy, 740, randint(80, win_height - 80), 80, 50, randint(1, 3), 3)
                     superMonsters.add(superMonster)
+
+        for i in boss:
+            if sprite.spritecollide(i, bullets, True):
+                i.gotHit()
+                bhp -= 1
+                if i.isKilled():
+                    score = score + 15
 
         # якщо спрайт торкнувся ворога зменшує життя
         if sprite.spritecollide(player, monsters, False) or sprite.spritecollide(player, asteroids, False) or sprite.spritecollide(player, superMonsters, False):
@@ -289,6 +314,10 @@ while run:
 
         text_timer = font1.render(f"{60 - int(timer_s)}sec", 1, (255, 255, 255))
         window.blit(text_timer, (350, 10))
+
+        if len(boss) > 0:
+            boss_hp = font1.render(f"{bhp}boss hp", 1, (255, 255, 255))
+            window.blit(boss_hp, (350, 40))
 
         display.update()
 
