@@ -38,7 +38,6 @@ class GameSprite(sprite.Sprite):
 class Player(GameSprite):
     def __init__(self, sprite_img, sprite_x, sprite_y, size_x, sixe_y, sprite_speed):
         super().__init__(sprite_img, sprite_x, sprite_y, size_x, sixe_y, sprite_speed)
-        self.image = transform.rotate(self.image, -90)
     def update(self):
         keys = key.get_pressed()
         if keys[K_w] and self.rect.y > 5:
@@ -46,7 +45,7 @@ class Player(GameSprite):
         if keys[K_s] and self.rect.y < win_width - 80:
             self.rect.y += self.speed
     def fire(self):
-        bullet = Bullet("bullet.png", self.rect.centerx - 5, self.rect.top, 20, 15, -15)
+        bullet = Bullet("bullet.png", self.rect.centerx, self.rect.top + 60, 20, 15, -15)
         bullets.add(bullet)
 
 class Enemy(GameSprite):
@@ -120,13 +119,13 @@ class Bullet(GameSprite):
 
 def first_spawn():
     for i in range(1, 8):
-        monster = Enemy(img_enemy, 740, randint(80, win_height - 80), 80, 50, randint(1, 3))
+        monster = Enemy(img_enemy, 740, randint(80, win_height - 80), 150, 110, randint(1, 3))
         monsters.add(monster)
     for i in range(1, 5):
-        asteroid = Asteroid(img_non_killable_enemy, 740, randint(80, win_height - 80), 80, 50, randint(1, 7))
+        asteroid = Asteroid(img_non_killable_enemy, 740, randint(80, win_height - 80), 150, 110,randint(1, 7))
         asteroids.add(asteroid)
     for i in range(1, 6):
-        superMonster = SuperEnemy(img_superEnemy, 740, randint(80, win_height - 80), 80, 50, randint(1, 3), 3)
+        superMonster = SuperEnemy(img_superEnemy, 740, randint(80, win_height - 80), 150, 110, randint(1, 3), 3)
         superMonsters.add(superMonster)
 
 
@@ -137,7 +136,7 @@ window = display.set_mode((win_width, win_height))
 display.set_caption("Shooter")
 background = transform.scale(image.load(img_back), (win_width, win_height))
 
-player = Player(img_hero, 5, win_height - 100, 80, 100, 10)
+player = Player(img_hero, 5, win_height - 100, 120, 120, 10)
 # health_pack = HealthPack(img_health, randint(30, win_width - 30), -40, 30, 30, 7)
 
 
@@ -165,7 +164,7 @@ inf_time = 0
 boss = sprite.Group()
 bhp = 40
 
-boss1 = SuperEnemy('pudge.png', 740, randint(80, win_height - 80), 200, 160, 2, 40)
+boss1 = SuperEnemy('pudge.png', 740, randint(80, win_height - 80), 300, 240, 2, 40)
 boss.add(boss1)
 
 while run:
@@ -193,7 +192,7 @@ while run:
 
     if not finish:
         window.blit(background, (0, 0))
-        if int(timer_s) >= 1:
+        if int(timer_s) >= 30:
             for i in boss:
                 i.super_update()
             boss.draw(window)
@@ -244,7 +243,7 @@ while run:
         for collide in collides:
             # цей цикл повториться стільки разів, скільки монстрів збито
             score = score + 1
-            monster = Enemy(img_enemy, 740, randint(80, win_height - 80), 80, 50, randint(1, 3))
+            monster = Enemy(img_enemy, 740, randint(80, win_height - 80), 150, 110, randint(1, 3))
             monsters.add(monster)
 
         for superMonster in superMonsters:
@@ -252,7 +251,7 @@ while run:
                 superMonster.gotHit()
                 if superMonster.isKilled():
                     score = score + 1
-                    superMonster = SuperEnemy(img_superEnemy, 740, randint(80, win_height - 80), 80, 50, randint(1, 3), 3)
+                    superMonster = SuperEnemy(img_superEnemy, 740, randint(80, win_height - 80), 150, 110, randint(1, 3), 3)
                     superMonsters.add(superMonster)
 
         for i in boss:
@@ -267,13 +266,13 @@ while run:
             if not inf:
                 life = life - 1
             if sprite.spritecollide(player, monsters, True):
-                monster = Enemy(img_enemy, 740, randint(80, win_height - 80), 80, 50, randint(1, 3))
+                monster = Enemy(img_enemy, 740, randint(80, win_height - 80), 150, 110, randint(1, 3))
                 monsters.add(monster)
             if sprite.spritecollide(player, asteroids, True):
-                asteroid = Asteroid(img_non_killable_enemy, 740, randint(80, win_height - 80), 80, 50, randint(1, 7))
+                asteroid = Asteroid(img_non_killable_enemy, 740, randint(80, win_height - 80), 150, 110, randint(1, 7))
                 asteroids.add(asteroid)
             if sprite.spritecollide(player, superMonsters, True):
-                superMonster = SuperEnemy(img_superEnemy, 740, randint(80, win_height - 80), 80, 50, randint(1, 3), 3)
+                superMonster = SuperEnemy(img_superEnemy, 740, randint(80, win_height - 80), 150, 110, randint(1, 3), 3)
                 superMonsters.add(superMonster)
 
         if sprite.spritecollide(player, health_packs, True):
