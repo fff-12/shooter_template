@@ -314,9 +314,11 @@ while run:
         text_timer = font1.render(f"{60 - int(timer_s)}sec", 1, (255, 255, 255))
         window.blit(text_timer, (350, 10))
 
-        if len(boss) > 0:
-            boss_hp = font1.render(f"{bhp}boss hp", 1, (255, 255, 255))
-            window.blit(boss_hp, (350, 40))
+        for i in boss:
+            if int(timer_s) >= 30 and not i.isKilled():
+                boss_hp = font1.render(f"{bhp}boss hp", 1, (255, 255, 255))
+                window.blit(boss_hp, (350, 40))
+        
 
         display.update()
 
